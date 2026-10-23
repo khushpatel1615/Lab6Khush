@@ -42,15 +42,20 @@ router.get('/:id', async (req, res, next) => {
 });
 
 router.post('/', taskRules, async (req, res, next) => {
-  try { res.status(201).json(await Task.create(req.body)); }
-  catch (err) { next(err); }
+  try {
+    const task = await Task.create(req.body);
+    await redis.del('tasks:all');
+    res.status(201).json(task);
+  } catch (err) { next(err); }
 });
 
 router.put('/:id', taskUpdateRules, async (req, res, next) => {
   try {
     const task = await Task.findByPk(req.params.id);
     if (!task) return res.status(404).json({ error: 'Task not found' });
-    await task.update(req.body); res.json(task);
+    await task.update(req.body);
+    await redis.del('tasks:all');
+    res.json(task);
   } catch (err) { next(err); }
 });
 
@@ -58,6 +63,7 @@ router.delete('/:id', async (req, res, next) => {
   try {
     const deleted = await Task.destroy({ where: { id: req.params.id } });
     if (!deleted) return res.status(404).json({ error: 'Task not found' });
+    await redis.del('tasks:all');
     res.status(204).send();
   } catch (err) { next(err); }
 });
