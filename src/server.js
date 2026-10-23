@@ -30,6 +30,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use('/api/tasks', taskRoutes);
+app.use('/api/auth', require('./routes/auth'));
 
 app.use((req, res) => res.status(404).json({ error: 'Route not found' }));
 app.use((err, req, res, next) => {
