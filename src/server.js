@@ -4,9 +4,12 @@ const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const compression = require('compression');
+const session = require('express-session');
+const passport = require('./config/passport');
 const taskRoutes = require('./routes/tasks');
 const sequelize = require('./config/database');
 require('./models/Task');
+require('./models/User');
 
 const app = express();
 app.use(helmet());
@@ -14,6 +17,14 @@ app.use(compression());
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100, standardHeaders: true }));
 app.use(express.json());
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: { httpOnly: true, sameSite: 'lax', secure: false }
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
   next();
